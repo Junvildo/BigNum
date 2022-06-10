@@ -1,132 +1,205 @@
 #include"Header.h"
-
 class UintN {
 private:
-	int value;
+	unsigned int size;
+	unsigned int noDigit;
+	char* digit;
 public:
-	UintN() { value = 0; }
-	UintN(int val) { value = val; }
-
-	//Calculating
-	void CalOper(UintN Operand) {
-		cout << "\nCALCULATING PART" << endl;
-		Plus(Operand);
-		Minus(Operand);
-		Time(Operand);
-		if (Operand.value==0)
-		{
-			cout << "\nCAN'T PERFORM DIVIDE OPERATION." << endl;
-		}
-		else
-		{
-			Divide(Operand);
-			Module(Operand);
-			Remainder(Operand);
-		}
-		cout << "END CALCULATING." << endl;
+	UintN() {
+		size = 1;
+		noDigit = 1;
+		digit = new char[noDigit];
 	}
-	void Plus(UintN Operand) { cout << value << " + " << Operand.value << " = " << value + Operand.value << endl; }
-	void Minus(UintN Operand) { cout << value << " - " << Operand.value << " = " << value - Operand.value << endl; }
-	void Time(UintN Operand) { cout << value << " x " << Operand.value << " = " << value * Operand.value << endl; }
-	void Divide(UintN Operand) { cout << value << " : " << Operand.value << " = " << float(value) / float(Operand.value) << endl; }
-	void Module(UintN Operand) { cout << value << " MOD " << Operand.value << " = " << value % Operand.value << endl; }
-	void Remainder(UintN Operand) { cout << value << " DIV " << Operand.value << " = " << value - value % Operand.value << " REMAINDER = " << value % Operand.value << endl; }
-
-	//Comparing
-	void CompareOper(UintN Operand) {
-		cout << "\nCOMPARING PART" << endl;
-		if (!isEqual(Operand))
+	UintN(unsigned int N, unsigned int No, char* input) {
+		size = 4 * N;
+		noDigit = No;
+		digit = new char[noDigit];
+		strcpy(digit,input);
+	}
+	void Print() {
+		for (size_t i = 0; i < noDigit; i++)
 		{
-			cout << value << " != " << Operand.value << endl;
-			if (value>Operand.value)
+			cout << digit[i];
+		}
+	}
+	//HANDLING DATA
+	int Ch2Int(char val) { return int(val - '0'); }
+	int Int2Ch(int val) { return char(val + '0'); }
+	//CALCULATING
+	int Further(bool further) { return further ?  1 : 0; }
+	UintN Addition(UintN other) {
+		UintN result(size, noDigit + 1, digit);
+		bool isFurther = false;
+		for (int i = noDigit - 1; i >= 0; i--)
+		{
+			if (i == noDigit - 1)
 			{
-				cout << value << " > " << Operand.value << endl;
+				result.digit[i + 1] = Int2Ch((Ch2Int(digit[i]) + Ch2Int(other.digit[i])) % 10);
 			}
 			else
 			{
-				cout << value << " < " << Operand.value << endl;
+				isFurther = false;
+				if ((Ch2Int(digit[i + 1]) + Ch2Int(other.digit[i + 1])) >= 10
+					|| (Ch2Int(digit[i]) + Ch2Int(other.digit[i])) + Further(isFurther)) {
+					isFurther = true;
+				}
+				result.digit[i + 1] = Int2Ch(((Ch2Int(digit[i]) + Ch2Int(other.digit[i])) + Further(isFurther)) % 10);
 			}
+		}
+		((Ch2Int(digit[0]) + Ch2Int(other.digit[0])) >= 10
+			|| (Ch2Int(digit[0]) + Ch2Int(other.digit[0])) + Further(isFurther)>=10) ? result.digit[0] = '1' : result.digit[0] = '0';
+		return result;
+	}
+	UintN Minus(UintN other) {
+		bool isFurther;
+		if (isEqual(other))
+		{
+			UintN result(size, 1, digit);
+			result.digit[0] = '0';
+			return result;
 		}
 		else
 		{
-			cout << value << " = " << Operand.value << endl;
+			if (isGreater(other))
+			{
+				UintN result(size, noDigit, digit);
+				for (int i = noDigit - 1; i >= 0; i--)
+				{
+					isFurther = false;
+					if ((Ch2Int(digit[i]) - Ch2Int(other.digit[i])) < 0) { isFurther = true; }
+					result.digit[i] = Int2Ch(abs(Ch2Int(digit[i]) - Ch2Int(other.digit[i]) - Further(isFurther)));
+				}
+				return result;
+			}
+			else
+			{
+				UintN result(size, noDigit + 1, digit);
+				for (int i = noDigit - 1; i >= 0; i--)
+				{
+					isFurther = false;
+					if ((Ch2Int(other.digit[i]) - Ch2Int(digit[i])) < 0) { isFurther = true; }
+					result.digit[i + 1] = Int2Ch(abs((Ch2Int(other.digit[i]) - Ch2Int(digit[i])) - Further(isFurther)));
+				}
+				result.digit[0] = '-';
+				return result;
+			}
 		}
-		cout << "END COMPARING." << endl;
 	}
-	bool isEqual(UintN Operand) {
-		if (value==Operand.value)
+
+	//COMPARING
+	int getLength() {
+		int result = 0;
+		while (digit[result]!=NULL)
+		{
+			result++;
+		}
+		return result;
+	}
+	bool isEqual(UintN other) {
+		if (getLength()!=other.getLength())
+		{
+			return false;
+		}
+		else
+		{
+			int i = 0;
+			while (i<= getLength())
+			{
+				if (digit[i]!=other.digit[i])
+				{
+					return false;
+				}
+				i++;
+			}
+			return true;
+		}
+	}
+	bool isGreater(UintN other) {
+		if (getLength()>other.getLength())
 		{
 			return true;
 		}
 		else
 		{
-			return false;
-		}
-	}
-
-	//Prime Checking
-	void PrimeOper(UintN Operand) {
-		cout << "\nPRIME RELATED OPERATOR" << endl;
-		if (isEqual(Operand))
-		{
-			primePrint(value, isPrime());
-		}
-		else
-		{
-			primePrint(value, isPrime());
-			primePrint(Operand.value, Operand.isPrime());
-		}
-		value >= Operand.value ? nextPrime() : Operand.nextPrime();
-		cout << "END PRIME RELATED OPERATOR." << endl;
-	}
-	void primePrint(int val, bool isPrime) {
-		if (isPrime)
-		{
-			cout << val << " Is Prime" << endl;
-		}
-		else
-		{
-			cout << val << " Is Not Prime" << endl;
-		}
-	}
-	bool isPrime() {
-		if (value<=1)
-		{
-			return false;
-		}
-		for (int i = 2; i < value; i++) {
-			if (value % i == 0)
+			if (getLength() < other.getLength())
+			{
 				return false;
+			}
 		}
-		return true;
-	}
-	void nextPrime()
-	{
-		if (value <= 1) { cout << 2 << " Is The Next Prime Number." << endl; }
-		UintN prime = value;
-		bool found = false;
-		while (!found) {
-			prime.value++;
-			if (prime.isPrime()) { found = true; }
+		int i = 0;
+		while (i <= getLength())
+		{
+			if (digit[i] == other.digit[i])
+			{
+				i++;
+			}
+			else
+			{
+				if (Ch2Int(digit[i])>Ch2Int(other.digit[i]))
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+			i++;
 		}
-		cout << prime.value << " Is The Next Prime Number." << endl;
 	}
 
 	~UintN() {}
 };
-
 int main() {
-	UintN num[2];
-	int temp;
+	UintN *num[2];
+	char* temp;
 	int N;
-	//cout << "Enter Size constant"; cin >> N;
+	cout << "Enter Number Size Constant (N):\t";
+	cin >> N;
+	cin.ignore();
+	temp = new char[4 * N];
 	for (int i = 0; i < 2; i++)
 	{
-		cout << "Enter " << i + 1 << " numer:\t";
-		cin >> temp;
-		num[i] = temp;
+		cout << "Enter Number " << ":\t";
+		cin.getline(temp, 4 * N);
+		num[i] = new UintN(4 * N, strlen(temp), temp);
 	}
-	num[0].CalOper(num[1]);
-	num[0].CompareOper(num[1]);
-	num[0].PrimeOper(num[1]);
+	for (int i = 0; i < 2; i++)
+	{
+		num[i]->Print();
+		cout << endl;
+	}
+	cout << "\nAddtion: ";
+	num[0]->Addition(*num[1]).Print();
+	cout << "\nMinus: ";
+	num[0]->Minus(*num[1]).Print();
+	if (num[0]->isEqual(*num[1]))
+	{
+		cout << endl;
+		num[0]->Print();
+		cout << " = ";
+		num[1]->Print();
+		cout << endl;
+	}
+	else
+	{
+		cout << endl;
+		num[0]->Print();
+		cout << " != ";
+		num[1]->Print();
+		cout << endl;
+
+		if (num[0]->isGreater(*num[1]))
+		{
+			num[0]->Print();
+			cout << " > ";
+			num[1]->Print();
+		}
+		else
+		{
+			num[0]->Print();
+			cout << " < ";
+			num[1]->Print();
+		}
+	}
 }
